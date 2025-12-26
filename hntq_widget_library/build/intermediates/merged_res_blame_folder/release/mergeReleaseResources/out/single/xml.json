@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.hntq.destop.widget.library.hntq_widget_library-release-32:/xml/hot_search_widget_info.xml",
+        "source": "com.hntq.destop.widget.library.hntq_widget_library-main-33:/xml/hot_search_widget_info.xml"
+    },
+    {
+        "merged": "com.hntq.destop.widget.library.hntq_widget_library-release-32:/xml/hitokoto_widget_info.xml",
+        "source": "com.hntq.destop.widget.library.hntq_widget_library-main-33:/xml/hitokoto_widget_info.xml"
+    }
+]

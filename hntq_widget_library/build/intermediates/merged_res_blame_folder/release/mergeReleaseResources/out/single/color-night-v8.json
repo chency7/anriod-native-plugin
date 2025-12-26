@@ -1,0 +1,14 @@
+[
+    {
+        "merged": "com.hntq.destop.widget.library.hntq_widget_library-release-32:/color-night-v8/material_timepicker_button_stroke.xml",
+        "source": "com.hntq.destop.widget.library.hntq_widget_library-material-1.10.0-23:/color-night-v8/material_timepicker_button_stroke.xml"
+    },
+    {
+        "merged": "com.hntq.destop.widget.library.hntq_widget_library-release-32:/color-night-v8/material_timepicker_clockface.xml",
+        "source": "com.hntq.destop.widget.library.hntq_widget_library-material-1.10.0-23:/color-night-v8/material_timepicker_clockface.xml"
+    },
+    {
+        "merged": "com.hntq.destop.widget.library.hntq_widget_library-release-32:/color-night-v8/material_timepicker_modebutton_tint.xml",
+        "source": "com.hntq.destop.widget.library.hntq_widget_library-material-1.10.0-23:/color-night-v8/material_timepicker_modebutton_tint.xml"
+    }
+]

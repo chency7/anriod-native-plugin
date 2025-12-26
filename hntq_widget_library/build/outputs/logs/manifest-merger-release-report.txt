@@ -1,0 +1,56 @@
+-- Merging decision tree log ---
+manifest
+ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:2:1-34:12
+INJECTED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:2:1-34:12
+	package
+		INJECTED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml
+	xmlns:android
+		ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:2:11-69
+uses-permission#android.permission.INTERNET
+ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:4:5-67
+	android:name
+		ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:4:22-64
+application
+ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:6:5-32:19
+receiver#com.hntq.destop.widget.library.HitokotoWidget
+ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:7:9-18:20
+	android:exported
+		ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:9:13-36
+	android:name
+		ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:8:13-73
+intent-filter#action:name:android.appwidget.action.APPWIDGET_UPDATE+action:name:com.hntq.destop.widget.library.ACTION_REFRESH
+ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:10:13-13:29
+action#android.appwidget.action.APPWIDGET_UPDATE
+ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:11:17-84
+	android:name
+		ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:11:25-81
+action#com.hntq.destop.widget.library.ACTION_REFRESH
+ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:12:17-88
+	android:name
+		ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:12:25-85
+meta-data#android.appwidget.provider
+ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:15:13-17:64
+	android:resource
+		ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:17:17-61
+	android:name
+		ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:16:17-58
+receiver#com.hntq.destop.widget.library.HotSearchWidget
+ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:20:9-31:20
+	android:exported
+		ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:22:13-36
+	android:name
+		ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:21:13-74
+intent-filter#action:name:android.appwidget.action.APPWIDGET_UPDATE+action:name:com.hntq.destop.widget.library.ACTION_HOT_REFRESH
+ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:23:13-26:29
+action#com.hntq.destop.widget.library.ACTION_HOT_REFRESH
+ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:25:17-92
+	android:name
+		ADDED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml:25:25-89
+uses-sdk
+INJECTED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml
+INJECTED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from E:\code\anriod-native-plugin\hntq_widget_library\src\main\AndroidManifest.xml
