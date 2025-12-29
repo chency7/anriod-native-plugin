@@ -3,10 +3,11 @@
     android:description="@string/hot_search_widget_description"
     android:initialKeyguardLayout="@layout/hot_search_widget"
     android:initialLayout="@layout/hot_search_widget"
-    android:minWidth="400dp"
+    android:minWidth="320dp"
     android:minHeight="110dp"
+    android:minResizeWidth="600dp"
+    android:minResizeHeight="110dp"
     android:previewImage="@drawable/example_appwidget_preview"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="1800000"
     android:widgetCategory="home_screen" />
-

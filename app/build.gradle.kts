@@ -5,14 +5,12 @@ plugins {
 
 android {
     namespace = "com.hntq.destop.widget"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.hntq.destop.widget"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 

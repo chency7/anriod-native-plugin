@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.hntq.destop.widget.library"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         minSdk = 26
