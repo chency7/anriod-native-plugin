@@ -1,3 +1,17 @@
 <resources>
-    <dimen name="widget_margin">20dp</dimen>
+    <dimen name="widget_margin">10dp</dimen>
+
+    <!-- Weather Widget Dimens -->
+    <dimen name="widget_padding">16dp</dimen>
+    <dimen name="widget_corner_radius">18dp</dimen>
+    
+    <dimen name="weather_text_size_normal">16sp</dimen>
+    <dimen name="weather_text_size_large">36sp</dimen>
+    
+    <dimen name="weather_icon_size_small">12dp</dimen>
+    <dimen name="weather_icon_size_location">16dp</dimen>
+    <dimen name="weather_icon_size_medium">24dp</dimen>
+    
+    <dimen name="spacing_small">4dp</dimen>
+    <dimen name="spacing_medium">8dp</dimen>
 </resources>

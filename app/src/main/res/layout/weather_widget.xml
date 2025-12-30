@@ -1,52 +1,120 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_weather_widget"
-    android:padding="@dimen/widget_margin">
+    android:background="@drawable/bg_weather_sunny"
+    android:padding="@dimen/widget_padding">
 
-    <TextView
-        android:id="@+id/weather_location"
+    <!-- Top Left: Temp + Unit + Condition -->
+    <LinearLayout
+        android:id="@+id/layout_temp_info"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:text="湖南省预警中心"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:textStyle="bold" />
+        android:layout_alignParentStart="true"
+        android:orientation="horizontal">
 
-    <TextView
-        android:id="@+id/weather_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        <TextView
+            android:id="@+id/weather_temp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="26"
+            android:textSize="48sp"
+            android:textColor="@color/weather_text_primary"
+            android:fontFamily="sans-serif-light"
+            android:includeFontPadding="false" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginStart="4dp">
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="°C"
+                android:textSize="14sp"
+                android:textColor="@color/weather_text_primary"
+                android:layout_marginTop="6dp"/>
+
+            <TextView
+                android:id="@+id/weather_desc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="晴"
+                android:textSize="14sp"
+                android:textColor="@color/weather_text_primary"
+                android:layout_marginTop="0dp"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Top Right: Weather Icon -->
+    <ImageView
+        android:id="@+id/weather_icon"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
         android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:text="@string/weather_widget_title"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:textStyle="bold" />
+        android:layout_alignParentEnd="true"
+        android:src="@drawable/ic_weather_sun"
+        app:tint="@color/weather_text_primary"
+        xmlns:app="http://schemas.android.com/apk/res-auto"/>
 
-    <TextView
-        android:id="@+id/weather_temp"
+    <!-- Bottom Left: AQI + Temp Range -->
+    <LinearLayout
+        android:id="@+id/layout_bottom_info"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="--°C"
-        android:textColor="#FFFFFF"
-        android:textSize="28sp"
-        android:textStyle="bold" />
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/weather_rain"
+        <TextView
+            android:id="@+id/weather_aqi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="空气优"
+            android:textSize="12sp"
+            android:textColor="@color/weather_text_primary" 
+            android:fontFamily="sans-serif-light" 
+            android:layout_marginBottom="5dp" />
+
+        <TextView
+            android:id="@+id/weather_high_low"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="湿度 --%"
+            android:textSize="12sp"
+            android:textColor="@color/weather_text_primary" />
+    </LinearLayout>
+
+    <!-- Bottom Right: Location -->
+    <LinearLayout
+        android:id="@+id/layout_location"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/weather_temp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="8dp"
-        android:text="降雨 -- mm"
-        android:textColor="#EAEAEA"
-        android:textSize="13sp" />
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:src="@drawable/ic_location_pin"
+            app:tint="@color/weather_text_primary"
+            xmlns:app="http://schemas.android.com/apk/res-auto"/>
+
+        <TextView
+            android:id="@+id/weather_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="--区"
+            android:textSize="12sp"
+            android:textColor="@color/weather_text_primary" />
+    </LinearLayout>
 
 </RelativeLayout>
-

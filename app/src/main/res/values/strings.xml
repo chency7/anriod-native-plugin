@@ -1,13 +1,12 @@
 <resources>
-    <string name="app_name">bui-best</string>
-    <string name="appwidget_text">Hello World!</string>
-    <string name="appwidget_description">This is a sample widget.</string>
+    <string name="app_name">湖南天气插件</string>
+    <string name="appwidget_text">你好，世界！</string>
+    <string name="appwidget_description">这是一个示例插件。</string>
     <string name="add_widget_instruction">长按Home键添加小部件5</string>
     <string name="hitokoto_widget_name">一言谏言</string>
     <string name="hitokoto_widget_description">显示一言API的谏言</string>
-    <string name="hot_search_widget_title">热搜速览</string>
-    <string name="hot_search_widget_footer">微博热搜 · 点击标题刷新</string>
+    <string name="hot_search_widget_title">灾情快报</string>
+    <string name="hot_search_widget_footer">数据来源 · 微波热搜</string>
     <string name="hot_search_widget_description">显示微博热搜前三并轮播</string>
-    <string name="weather_widget_title">今日天气</string>
     <string name="weather_widget_description">显示当前气温和降雨量</string>
 </resources>
