@@ -23,10 +23,8 @@ class WeatherWidget : AppWidgetProvider() {
         private const val ACTION_AUTO_UPDATE = "com.hntq.destop.widget.ACTION_WEATHER_AUTO_UPDATE"
         private const val ACTION_REFRESH = "com.hntq.destop.widget.ACTION_WEATHER_REFRESH"
         private const val UPDATE_INTERVAL_MILLIS = 60_000L
-        
         private const val YYY_API_KEY = "f99f9dff-1679-d527-611c-97d8b06ae383eb736a39"
         private const val AMAP_API_KEY = "045af3b53e0e7f5078be868fbcf6af82"
-        
         // 默认坐标（天心区）
         private const val LAT = 28.035402
         private const val LON = 112.995397

@@ -11,7 +11,7 @@ interface YyyWeatherService {
         @Query("type") type: String = "realtime",
         @Query("location") location: String,
         @Query("city") city: String,
-        @Query("alert") alert: String = "ture",
+        @Query("alert") alert: String = "true",
         @Query("hours") hours: Int = 1,
         @Query("days") days: Int = 1,
         @Query("dailysteps") dailysteps: Int = 7,

@@ -42,4 +42,4 @@ HBuilderX 校验要求：`_dp_nativeplugin.android.plugins` 必须存在，且�
 
 ### 代码注释规范
 
-- **不要写英文注释，全部换成中文注释**
+- 不要写英文注释，全部换成中文注释

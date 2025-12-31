@@ -8,7 +8,25 @@ data class YyyWeatherResponse(
 )
 
 data class YyyResult(
-    val realtime: YyyRealtime?
+    val realtime: YyyRealtime?,
+    val hourly: YyyHourly?
+)
+
+data class YyyHourly(
+    val status: String?,
+    val temperature: List<YyyHourlyData>?,
+    val skycon: List<YyyHourlySkycon>?,
+    val precipitation: List<YyyHourlyData>?
+)
+
+data class YyyHourlyData(
+    val datetime: String?,
+    val value: Double?
+)
+
+data class YyyHourlySkycon(
+    val datetime: String?,
+    val value: String?
 )
 
 data class YyyRealtime(

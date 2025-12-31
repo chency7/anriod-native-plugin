@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:installLocation="internalOnly">
-
+    <!-- 网络权限 -->
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- 增加定位权限 -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -76,6 +76,19 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/weather_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".HourlyForecastWidget"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.hntq.destop.widget.ACTION_HOURLY_REFRESH" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/hourly_forecast_widget_info" />
         </receiver>
 
     </application>
