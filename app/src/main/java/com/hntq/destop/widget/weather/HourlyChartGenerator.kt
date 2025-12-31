@@ -1,5 +1,6 @@
-package com.hntq.destop.widget
+package com.hntq.destop.widget.weather
 
+import com.hntq.destop.widget.R
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas

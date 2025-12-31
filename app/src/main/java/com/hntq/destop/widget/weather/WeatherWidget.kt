@@ -1,5 +1,6 @@
-package com.hntq.destop.widget
+package com.hntq.destop.widget.weather
 
+import com.hntq.destop.widget.R
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -32,9 +33,7 @@ class WeatherWidget : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         startAlarm(context)
-        for (appWidgetId in appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, appWidgetId)
-        }
+        // 注意：更新逻辑已移至 onReceive 以支持异步保活（goAsync）
     }
 
     override fun onEnabled(context: Context) {
@@ -47,12 +46,34 @@ class WeatherWidget : AppWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        if (intent.action == ACTION_AUTO_UPDATE || intent.action == ACTION_REFRESH) {
+        
+        val action = intent.action
+        if (action == AppWidgetManager.ACTION_APPWIDGET_UPDATE || 
+            action == ACTION_AUTO_UPDATE || 
+            action == ACTION_REFRESH) {
+            
+            val pendingResult = goAsync()
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val componentName = ComponentName(context, WeatherWidget::class.java)
-            val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
+            
+            val appWidgetIds = if (action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
+                intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS) ?: appWidgetManager.getAppWidgetIds(componentName)
+            } else {
+                appWidgetManager.getAppWidgetIds(componentName)
+            }
+
+            if (appWidgetIds == null || appWidgetIds.isEmpty()) {
+                pendingResult.finish()
+                return
+            }
+
+            val counter = java.util.concurrent.atomic.AtomicInteger(appWidgetIds.size)
             for (appWidgetId in appWidgetIds) {
-                updateAppWidget(context, appWidgetManager, appWidgetId)
+                updateAppWidget(context, appWidgetManager, appWidgetId) {
+                    if (counter.decrementAndGet() == 0) {
+                        pendingResult.finish()
+                    }
+                }
             }
         }
     }
@@ -86,7 +107,7 @@ class WeatherWidget : AppWidgetProvider() {
         alarmManager.cancel(pendingIntent)
     }
 
-    private fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
+    private fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, onComplete: () -> Unit) {
         val views = RemoteViews(context.packageName, R.layout.weather_widget)
         // 尝试获取位置
         var lat = LAT
@@ -135,6 +156,7 @@ class WeatherWidget : AppWidgetProvider() {
         if (AMAP_API_KEY == "YOUR_AMAP_KEY_HERE") {
             views.setTextViewText(R.id.weather_location, "需高德Key")
             appWidgetManager.updateAppWidget(appWidgetId, views)
+            onComplete()
             return
         }
 
@@ -159,14 +181,14 @@ class WeatherWidget : AppWidgetProvider() {
                 val displayLocation = if (!district.isNullOrEmpty()) district else cityStr
                 views.setTextViewText(R.id.weather_location, if(isGpsUsed) displayLocation else "$displayLocation")
                 
-                fetchWeather(context, cityForQuery, lat, lon, views, appWidgetManager, appWidgetId)
+                fetchWeather(context, cityForQuery, lat, lon, views, appWidgetManager, appWidgetId, onComplete)
             }
 
             override fun onFailure(call: Call<GeocodingResponse>, t: Throwable) {
                 android.util.Log.e("WeatherWidget", "Geo failed: ${t.message}")
                 // 降级到深圳
                 views.setTextViewText(R.id.weather_location, "定位失败")
-                fetchWeather(context, "定位失败", lat, lon, views, appWidgetManager, appWidgetId)
+                fetchWeather(context, "定位失败", lat, lon, views, appWidgetManager, appWidgetId, onComplete)
             }
         })
     }
@@ -178,7 +200,8 @@ class WeatherWidget : AppWidgetProvider() {
         lon: Double,
         views: RemoteViews, 
         appWidgetManager: AppWidgetManager, 
-        appWidgetId: Int
+        appWidgetId: Int,
+        onComplete: () -> Unit
     ) {
         // Yyy 天气服务
         val yyyRetrofit = Retrofit.Builder()
@@ -229,11 +252,13 @@ class WeatherWidget : AppWidgetProvider() {
                     views.setTextViewText(R.id.weather_desc, body?.status ?: "")
                 }
                 appWidgetManager.updateAppWidget(appWidgetId, views)
+                onComplete()
             }
 
             override fun onFailure(call: Call<YyyWeatherResponse>, t: Throwable) {
                 views.setTextViewText(R.id.weather_desc, "Net Err")
                 appWidgetManager.updateAppWidget(appWidgetId, views)
+                onComplete()
             }
         })
     }

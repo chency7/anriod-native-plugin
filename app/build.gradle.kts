@@ -33,6 +33,17 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+
+    sourceSets {
+        getByName("main") {
+            res.srcDirs(
+                "src/main/res",
+                "src/main/res-weather",
+                "src/main/res-hotsearch",
+                "src/main/res-hitokoto"
+            )
+        }
+    }
 }
 
 dependencies {

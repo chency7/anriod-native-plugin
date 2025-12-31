@@ -1,4 +1,4 @@
-package com.hntq.destop.widget
+package com.hntq.destop.widget.weather
 
 object HourlyForecastDataHolder {
     var hourlyData: List<HourlyItem> = emptyList()

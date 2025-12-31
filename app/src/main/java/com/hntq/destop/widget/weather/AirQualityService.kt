@@ -1,4 +1,4 @@
-package com.hntq.destop.widget
+package com.hntq.destop.widget.weather
 
 import retrofit2.Call
 import retrofit2.http.GET

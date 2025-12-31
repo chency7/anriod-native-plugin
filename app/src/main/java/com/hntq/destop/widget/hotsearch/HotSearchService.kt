@@ -1,4 +1,4 @@
-package com.hntq.destop.widget
+package com.hntq.destop.widget.hotsearch
 
 import retrofit2.Call
 import retrofit2.http.GET

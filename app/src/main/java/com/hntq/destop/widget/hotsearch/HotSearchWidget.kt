@@ -1,5 +1,6 @@
-package com.hntq.destop.widget
+package com.hntq.destop.widget.hotsearch
 
+import com.hntq.destop.widget.R
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager

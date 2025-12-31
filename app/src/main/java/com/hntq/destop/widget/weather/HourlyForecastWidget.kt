@@ -1,5 +1,6 @@
-package com.hntq.destop.widget
+package com.hntq.destop.widget.weather
 
+import com.hntq.destop.widget.R
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -64,6 +65,11 @@ class HourlyForecastWidget : AppWidgetProvider() {
         if (action == AppWidgetManager.ACTION_APPWIDGET_UPDATE || 
             action == ACTION_AUTO_UPDATE || 
             action == ACTION_REFRESH) {
+
+            // 如果是用户点击刷新，给出提示
+            if (action == ACTION_REFRESH) {
+                android.widget.Toast.makeText(context, "正在更新天气...", android.widget.Toast.LENGTH_SHORT).show()
+            }
             
             val pendingResult = goAsync()
             val appWidgetManager = AppWidgetManager.getInstance(context)
@@ -127,6 +133,38 @@ class HourlyForecastWidget : AppWidgetProvider() {
         onComplete: () -> Unit
     ) {
         val views = RemoteViews(context.packageName, R.layout.hourly_forecast_widget)
+        
+        // 尝试从缓存恢复旧数据，避免闪烁成默认值
+        try {
+            val cache = WeatherCache.getCache(context)
+            if (cache != null) {
+                // 1. 恢复温度
+                views.setTextViewText(R.id.hourly_temp, String.format("%.0f", cache.temp))
+                
+                // 2. 恢复天气描述和图标
+                val (desc, _, _) = getWeatherResources(cache.skycon)
+                views.setTextViewText(R.id.hourly_weather_desc, desc)
+                
+                // 3. 恢复 AQI
+                val aqiStr = if (cache.aqiDesc.isNotEmpty()) "${cache.aqiDesc} ${cache.aqiVal}" 
+                             else if (cache.aqiVal > 0) "${cache.aqiVal}" else "--"
+                views.setTextViewText(R.id.hourly_aqi, aqiStr)
+                
+                // 4. 恢复位置
+                views.setTextViewText(R.id.hourly_location, cache.location)
+                
+                // 5. 恢复图表（如果有单例数据）
+                if (HourlyForecastDataHolder.hourlyData.isNotEmpty()) {
+                    // 需要重新生成 Bitmap，因为 Bitmap 不能被缓存
+                    // 这里简单处理：如果单例有数据就画，没有就算了
+                    // 由于单例在进程重启后会丢，所以这里只能尽力而为
+                    // 理想情况是将 List 也缓存到文件，但这里先只做 Header 的防闪烁
+                }
+            }
+        } catch (e: Exception) {
+            // 忽略缓存读取错误
+        }
+
         try {
             // 定位逻辑（类似天气组件）
             var lat = LAT
@@ -178,16 +216,17 @@ class HourlyForecastWidget : AppWidgetProvider() {
                         val displayLocation = if (!district.isNullOrEmpty()) district else cityStr
                         
                         views.setTextViewText(R.id.hourly_location, if(isGpsUsed) displayLocation else "$displayLocation")
-                        fetchWeather(context, cityForQuery, lat, lon, views, appWidgetManager, appWidgetId, onComplete)
+                        val finalLocation = if(isGpsUsed) displayLocation else "$displayLocation"
+                        fetchWeather(context, cityForQuery, lat, lon, views, appWidgetManager, appWidgetId, finalLocation, onComplete)
                     } catch (e: Exception) {
                         views.setTextViewText(R.id.hourly_location, "定位解析错误")
-                        fetchWeather(context, "定位解析错误", lat, lon, views, appWidgetManager, appWidgetId, onComplete)
+                        fetchWeather(context, "定位解析错误", lat, lon, views, appWidgetManager, appWidgetId, "定位解析错误", onComplete)
                     }
                 }
 
                 override fun onFailure(call: Call<GeocodingResponse>, t: Throwable) {
                     views.setTextViewText(R.id.hourly_location, "定位失败")
-                    fetchWeather(context, "定位失败", lat, lon, views, appWidgetManager, appWidgetId, onComplete)
+                    fetchWeather(context, "定位失败", lat, lon, views, appWidgetManager, appWidgetId, "定位失败", onComplete)
                 }
             })
         } catch (e: Exception) {
@@ -206,13 +245,14 @@ class HourlyForecastWidget : AppWidgetProvider() {
         views: RemoteViews, 
         appWidgetManager: AppWidgetManager, 
         appWidgetId: Int,
+        locationName: String,
         onComplete: () -> Unit
     ) {
         try {
             val yyyRetrofit = Retrofit.Builder()
-                .baseUrl(YYY_BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
+            .baseUrl(YYY_BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
             val yyyService = yyyRetrofit.create(YyyWeatherService::class.java)
             val location = "$lon,$lat"
     
@@ -227,9 +267,9 @@ class HourlyForecastWidget : AppWidgetProvider() {
                     try {
                         val body = response.body()
                         val result = body?.result
-                        updateWidgetWithData(context, views, appWidgetManager, appWidgetId, result)
+                        updateWidgetWithData(context, views, appWidgetManager, appWidgetId, result, locationName)
                     } catch (e: Exception) {
-                        updateWidgetWithData(context, views, appWidgetManager, appWidgetId, null)
+                        updateWidgetWithData(context, views, appWidgetManager, appWidgetId, null, locationName)
                     } finally {
                         onComplete()
                     }
@@ -237,13 +277,13 @@ class HourlyForecastWidget : AppWidgetProvider() {
     
                 override fun onFailure(call: Call<YyyWeatherResponse>, t: Throwable) {
                     // 网络请求失败，使用完全模拟的数据
-                    updateWidgetWithData(context, views, appWidgetManager, appWidgetId, null)
+                    updateWidgetWithData(context, views, appWidgetManager, appWidgetId, null, locationName)
                     onComplete()
                 }
             })
         } catch (e: Exception) {
             android.util.Log.e("HourlyWidget", "Fetch weather error", e)
-            updateWidgetWithData(context, views, appWidgetManager, appWidgetId, null)
+            updateWidgetWithData(context, views, appWidgetManager, appWidgetId, null, locationName)
             onComplete()
         }
     }
@@ -296,7 +336,8 @@ class HourlyForecastWidget : AppWidgetProvider() {
         views: RemoteViews,
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int,
-        result: YyyResult?
+        result: YyyResult?,
+        locationName: String
     ) {
         try {
             val realtime = result?.realtime
@@ -319,6 +360,18 @@ class HourlyForecastWidget : AppWidgetProvider() {
             val aqiStr = if (aqiDesc.isNotEmpty()) "$aqiDesc $aqiVal" else if (aqiVal > 0) "$aqiVal" else "--" // 默认模拟值
             views.setTextViewText(R.id.hourly_aqi, aqiStr)
 
+            // 保存到缓存
+            if (result != null) {
+                WeatherCache.saveCache(
+                    context,
+                    tempVal,
+                    skycon,
+                    aqiDesc,
+                    aqiVal,
+                    locationName
+                )
+            }
+            
             // 2. 准备列表数据并更新 Holder（全部使用模拟数据）
             val newData = ArrayList<HourlyForecastDataHolder.HourlyItem>()
             generateMockHourlyData(newData, tempVal, skycon)
@@ -366,6 +419,19 @@ class HourlyForecastWidget : AppWidgetProvider() {
                     reqHeight
                 )
                 views.setImageViewBitmap(R.id.hourly_chart_view, chartBitmap)
+                
+                // 设置点击事件（点击整个 Widget 触发刷新）
+                val refreshIntent = Intent(context, HourlyForecastWidget::class.java).apply {
+                    action = ACTION_REFRESH
+                }
+                val pendingIntent = PendingIntent.getBroadcast(
+                    context,
+                    appWidgetId,
+                    refreshIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                views.setOnClickPendingIntent(R.id.hourly_root, pendingIntent)
+                
             } catch (e: Exception) {
                 android.util.Log.e("HourlyWidget", "Chart error", e)
                 views.setViewVisibility(R.id.hourly_chart_view, android.view.View.GONE)

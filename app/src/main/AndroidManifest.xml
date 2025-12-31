@@ -40,7 +40,7 @@
         </receiver>
 
         <receiver
-            android:name=".HitokotoWidget"
+            android:name=".hitokoto.HitokotoWidget"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -53,7 +53,7 @@
         </receiver>
 
         <receiver
-            android:name=".HotSearchWidget"
+            android:name=".hotsearch.HotSearchWidget"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -66,7 +66,7 @@
         </receiver>
 
         <receiver
-            android:name=".WeatherWidget"
+            android:name=".weather.WeatherWidget"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -79,7 +79,7 @@
         </receiver>
 
         <receiver
-            android:name=".HourlyForecastWidget"
+            android:name=".weather.HourlyForecastWidget"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

@@ -1,4 +1,4 @@
-package com.hntq.destop.widget
+package com.hntq.destop.widget.hitokoto
 
 import com.google.gson.annotations.SerializedName
 

@@ -1,4 +1,4 @@
-package com.hntq.destop.widget
+package com.hntq.destop.widget.weather
 
 data class WeatherCurrent(
     val temperature_2m: Double?,
