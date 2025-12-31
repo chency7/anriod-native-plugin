@@ -1,43 +1,59 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/new_widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#09C"
-    android:padding="@dimen/widget_margin">
+    android:background="@drawable/bg_schedule_widget"
+    android:padding="@dimen/widget_padding">
 
-    <!-- 文本-->
     <TextView
-        android:id="@+id/appwidget_text"
+        android:id="@+id/new_widget_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
+        android:layout_alignParentStart="true"
+        android:maxLines="1"
+        android:ellipsize="end"
         android:text="@string/appwidget_text"
-        android:textColor="#ffffff"
-        android:textSize="20sp" />
-
-   <!-- 时间显示  -->
-    <TextClock
-        android:id="@+id/appwidget_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"
-        android:format12Hour="hh:mm:ss a"
-        android:format24Hour="HH:mm:ss"
-        android:textColor="#ffffff"
-        android:textSize="32sp"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
         android:textStyle="bold" />
 
-    <!-- 作者署名 -->
+    <TextClock
+        android:id="@+id/new_widget_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:format12Hour="hh:mm"
+        android:format24Hour="HH:mm"
+        android:textColor="#FFFFFF"
+        android:textSize="48sp"
+        android:textStyle="bold"
+        android:includeFontPadding="false" />
+
+    <TextClock
+        android:id="@+id/new_widget_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/new_widget_time"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="6dp"
+        android:format12Hour="yyyy-MM-dd EEEE"
+        android:format24Hour="yyyy-MM-dd EEEE"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textColor="#CCFFFFFF"
+        android:textSize="12sp" />
+
     <TextView
-        android:id="@+id/appwidget_author"
+        android:id="@+id/new_widget_footer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:text="Author: hnzq"
-        android:textColor="#DDDDDD"
-        android:textSize="12sp"
-         />
+        android:layout_alignParentEnd="true"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:text="@string/new_app_widget_footer"
+        android:textColor="#CCFFFFFF"
+        android:textSize="11sp" />
 
 </RelativeLayout>
