@@ -23,6 +23,8 @@ class HourlyForecastWidget : AppWidgetProvider() {
 
     companion object {
         private const val YYY_BASE_URL = "https://api.yyy001.com/"
+        private const val OPEN_METEO_BASE_URL = "https://api.open-meteo.com/"
+        private const val OPEN_METEO_AIR_QUALITY_BASE_URL = "https://air-quality-api.open-meteo.com/"
         private const val GEO_BASE_URL = "https://restapi.amap.com/"
         private const val ACTION_AUTO_UPDATE = "com.hntq.destop.widget.ACTION_HOURLY_AUTO_UPDATE"
         private const val ACTION_REFRESH = "com.hntq.destop.widget.ACTION_HOURLY_REFRESH"
@@ -265,43 +267,142 @@ class HourlyForecastWidget : AppWidgetProvider() {
         locationName: String,
         onComplete: () -> Unit
     ) {
-        try {
-            val yyyRetrofit = Retrofit.Builder()
-            .baseUrl(YYY_BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            val yyyService = yyyRetrofit.create(YyyWeatherService::class.java)
-            val location = "$lon,$lat"
-    
-            // 使用网络请求获取天气数据（仅实时）
-            yyyService.getWeather(
-                apikey = YYY_API_KEY,
-                location = location,
-                city = city,
-                type = "realtime"
-            ).enqueue(object : Callback<YyyWeatherResponse> {
-                override fun onResponse(call: Call<YyyWeatherResponse>, response: Response<YyyWeatherResponse>) {
-                    try {
-                        val body = response.body()
-                        val result = body?.result
-                        updateWidgetWithData(context, views, appWidgetManager, appWidgetId, result, locationName)
-                    } catch (e: Exception) {
-                        updateWidgetWithData(context, views, appWidgetManager, appWidgetId, null, locationName)
-                    } finally {
+        fun fetchFromYyy() {
+            try {
+                val yyyRetrofit = Retrofit.Builder()
+                    .baseUrl(YYY_BASE_URL)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build()
+                val yyyService = yyyRetrofit.create(YyyWeatherService::class.java)
+                val location = "$lon,$lat"
+
+                yyyService.getWeather(
+                    apikey = YYY_API_KEY,
+                    location = location,
+                    city = city,
+                    type = "realtime"
+                ).enqueue(object : Callback<YyyWeatherResponse> {
+                    override fun onResponse(call: Call<YyyWeatherResponse>, response: Response<YyyWeatherResponse>) {
+                        val realtime = response.body()?.result?.realtime
+                        val temp = realtime?.temperature
+                        val skycon = realtime?.skycon
+                        val aqiVal = realtime?.airQuality?.aqi?.chn
+                        val aqiDesc = realtime?.airQuality?.description?.chn
+                        val hasRealtime = temp != null || !skycon.isNullOrEmpty() || realtime?.airQuality != null
+                        updateWidgetWithData(
+                            context,
+                            views,
+                            appWidgetManager,
+                            appWidgetId,
+                            temp,
+                            skycon,
+                            aqiVal,
+                            aqiDesc,
+                            locationName,
+                            hasRealtime
+                        )
                         onComplete()
                     }
+
+                    override fun onFailure(call: Call<YyyWeatherResponse>, t: Throwable) {
+                        updateWidgetWithData(
+                            context,
+                            views,
+                            appWidgetManager,
+                            appWidgetId,
+                            null,
+                            null,
+                            null,
+                            null,
+                            locationName,
+                            false
+                        )
+                        onComplete()
+                    }
+                })
+            } catch (e: Exception) {
+                android.util.Log.e("HourlyWidget", "Fetch weather error", e)
+                updateWidgetWithData(
+                    context,
+                    views,
+                    appWidgetManager,
+                    appWidgetId,
+                    null,
+                    null,
+                    null,
+                    null,
+                    locationName,
+                    false
+                )
+                onComplete()
+            }
+        }
+
+        try {
+            val weatherRetrofit = Retrofit.Builder()
+                .baseUrl(OPEN_METEO_BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+            val weatherService = weatherRetrofit.create(WeatherService::class.java)
+            weatherService.getWeather(latitude = lat, longitude = lon).enqueue(object : Callback<WeatherResponse> {
+                override fun onResponse(call: Call<WeatherResponse>, response: Response<WeatherResponse>) {
+                    val current = response.body()?.current
+                    if (!response.isSuccessful || current == null) {
+                        fetchFromYyy()
+                        return
+                    }
+
+                    val temp = current.temperature_2m
+                    val skycon = codeToSkycon(current.weather_code)
+                    val hasRealtime = temp != null || !skycon.isNullOrEmpty()
+
+                    val airRetrofit = Retrofit.Builder()
+                        .baseUrl(OPEN_METEO_AIR_QUALITY_BASE_URL)
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build()
+                    val airService = airRetrofit.create(AirQualityService::class.java)
+                    airService.getAirQuality(latitude = lat, longitude = lon).enqueue(object : Callback<AirQualityResponse> {
+                        override fun onResponse(call: Call<AirQualityResponse>, response: Response<AirQualityResponse>) {
+                            val (aqiVal, aqiDesc) = toAqiPair(response.body()?.current?.us_aqi)
+                            updateWidgetWithData(
+                                context,
+                                views,
+                                appWidgetManager,
+                                appWidgetId,
+                                temp,
+                                skycon,
+                                aqiVal,
+                                aqiDesc,
+                                locationName,
+                                hasRealtime
+                            )
+                            onComplete()
+                        }
+
+                        override fun onFailure(call: Call<AirQualityResponse>, t: Throwable) {
+                            updateWidgetWithData(
+                                context,
+                                views,
+                                appWidgetManager,
+                                appWidgetId,
+                                temp,
+                                skycon,
+                                null,
+                                null,
+                                locationName,
+                                hasRealtime
+                            )
+                            onComplete()
+                        }
+                    })
                 }
-    
-                override fun onFailure(call: Call<YyyWeatherResponse>, t: Throwable) {
-                    // 网络请求失败，使用完全模拟的数据
-                    updateWidgetWithData(context, views, appWidgetManager, appWidgetId, null, locationName)
-                    onComplete()
+
+                override fun onFailure(call: Call<WeatherResponse>, t: Throwable) {
+                    fetchFromYyy()
                 }
             })
         } catch (e: Exception) {
-            android.util.Log.e("HourlyWidget", "Fetch weather error", e)
-            updateWidgetWithData(context, views, appWidgetManager, appWidgetId, null, locationName)
-            onComplete()
+            fetchFromYyy()
         }
     }
 
@@ -353,20 +454,23 @@ class HourlyForecastWidget : AppWidgetProvider() {
         views: RemoteViews,
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int,
-        result: YyyResult?,
-        locationName: String
+        temp: Double?,
+        skyconInput: String?,
+        aqiValInput: Int?,
+        aqiDescInput: String?,
+        locationName: String,
+        hasRealtime: Boolean
     ) {
         try {
             val cache = WeatherCache.getCache(context)
-            val realtime = result?.realtime
-            val tempVal = realtime?.temperature ?: cache?.temp
+            val tempVal = temp ?: cache?.temp
             if (tempVal != null) {
                 views.setTextViewText(R.id.hourly_temp, String.format("%.0f", tempVal))
             } else {
                 views.setTextViewText(R.id.hourly_temp, "--")
             }
 
-            val skycon = realtime?.skycon ?: cache?.skycon
+            val skycon = skyconInput ?: cache?.skycon
             if (!skycon.isNullOrEmpty()) {
                 val (desc, _, _) = getWeatherResources(skycon)
                 views.setTextViewText(R.id.hourly_weather_desc, desc)
@@ -374,8 +478,8 @@ class HourlyForecastWidget : AppWidgetProvider() {
                 views.setTextViewText(R.id.hourly_weather_desc, "--")
             }
 
-            val aqiDesc = realtime?.airQuality?.description?.chn ?: cache?.aqiDesc.orEmpty()
-            val aqiVal = realtime?.airQuality?.aqi?.chn ?: cache?.aqiVal ?: 0
+            val aqiDesc = aqiDescInput?.trim().takeIf { !it.isNullOrEmpty() } ?: cache?.aqiDesc.orEmpty()
+            val aqiVal = aqiValInput ?: cache?.aqiVal ?: 0
             val aqiStr = if (aqiDesc.isNotEmpty()) "$aqiDesc $aqiVal" else if (aqiVal > 0) "$aqiVal" else "--"
             views.setTextViewText(R.id.hourly_aqi, aqiStr)
 
@@ -387,9 +491,6 @@ class HourlyForecastWidget : AppWidgetProvider() {
                 locationName
             }
             views.setTextViewText(R.id.hourly_location, displayLocation)
-
-            val hasRealtime =
-                realtime?.temperature != null || !realtime?.skycon.isNullOrEmpty() || realtime?.airQuality != null
 
             if (hasRealtime && tempVal != null && !skycon.isNullOrEmpty()) {
                 WeatherCache.saveCache(
@@ -451,6 +552,34 @@ class HourlyForecastWidget : AppWidgetProvider() {
             views.setTextViewText(R.id.hourly_location, "渲染错误")
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
+    }
+
+    private fun codeToSkycon(code: Int?): String? {
+        return when (code) {
+            0 -> "CLEAR_DAY"
+            1, 2, 3 -> "PARTLY_CLOUDY_DAY"
+            45, 48 -> "LIGHT_HAZE"
+            51, 53, 55, 56, 57 -> "RAIN"
+            61, 63, 65, 66, 67 -> "RAIN"
+            71, 73, 75, 77, 85, 86 -> "SNOW"
+            80, 81, 82 -> "RAIN"
+            95, 96, 99 -> "RAIN"
+            else -> null
+        }
+    }
+
+    private fun toAqiPair(usAqi: Double?): Pair<Int?, String?> {
+        val v = usAqi?.toInt()
+        val desc = when {
+            v == null -> null
+            v <= 50 -> "优"
+            v <= 100 -> "良"
+            v <= 150 -> "轻度污染"
+            v <= 200 -> "中度污染"
+            v <= 300 -> "重度污染"
+            else -> "严重污染"
+        }
+        return Pair(v, desc)
     }
 
     private fun getWeatherResources(skycon: String): Triple<String, Int, Int> {

@@ -2,6 +2,7 @@ package com.hntq.destop.widget.weather
 
 data class WeatherCurrent(
     val temperature_2m: Double?,
+    val relative_humidity_2m: Double?,
     val weather_code: Int?,
     val time: String?
 )

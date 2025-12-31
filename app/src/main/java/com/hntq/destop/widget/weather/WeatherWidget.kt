@@ -20,6 +20,8 @@ import java.util.Locale
 class WeatherWidget : AppWidgetProvider() {
     companion object {
         private const val YYY_BASE_URL = "https://api.yyy001.com/"
+        private const val OPEN_METEO_BASE_URL = "https://api.open-meteo.com/"
+        private const val OPEN_METEO_AIR_QUALITY_BASE_URL = "https://air-quality-api.open-meteo.com/"
         private const val GEO_BASE_URL = "https://restapi.amap.com/"
         private const val ACTION_AUTO_UPDATE = "com.hntq.destop.widget.ACTION_WEATHER_AUTO_UPDATE"
         private const val ACTION_REFRESH = "com.hntq.destop.widget.ACTION_WEATHER_REFRESH"
@@ -221,64 +223,122 @@ class WeatherWidget : AppWidgetProvider() {
         appWidgetId: Int,
         onComplete: () -> Unit
     ) {
-        // Yyy 天气服务
-        val yyyRetrofit = Retrofit.Builder()
-            .baseUrl(YYY_BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-        val yyyService = yyyRetrofit.create(YyyWeatherService::class.java)
+        fun fetchFromYyy() {
+            val yyyRetrofit = Retrofit.Builder()
+                .baseUrl(YYY_BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+            val yyyService = yyyRetrofit.create(YyyWeatherService::class.java)
 
+            val location = "$lon,$lat"
+            yyyService.getWeather(
+                apikey = YYY_API_KEY,
+                location = location,
+                city = city
+            ).enqueue(object : Callback<YyyWeatherResponse> {
+                override fun onResponse(call: Call<YyyWeatherResponse>, response: Response<YyyWeatherResponse>) {
+                    try {
+                        val body = response.body()
+                        val result = body?.result
+                        val realtime = result?.realtime
+                        if (body?.status == "ok" && realtime != null) {
+                            val tempVal = realtime.temperature
+                            if (tempVal != null) {
+                                views.setTextViewText(R.id.weather_temp, String.format("%.0f", tempVal))
+                            }
 
-        val location = "$lon,$lat"
-        android.util.Log.d("WeatherWidget-params", "fetchWeather params: city=$city, location=$location, apikey=$YYY_API_KEY")
-        yyyService.getWeather(
-            apikey = YYY_API_KEY,
-            location = location,
-            city = city
-        ).enqueue(object : Callback<YyyWeatherResponse> {
-            override fun onResponse(call: Call<YyyWeatherResponse>, response: Response<YyyWeatherResponse>) {
-                val body = response.body()
-                val result = body?.result
-                val realtime = result?.realtime
+                            val skycon = realtime.skycon ?: "CLEAR_DAY"
+                            val (desc, iconRes, bgRes) = getWeatherResources(skycon)
+                            views.setTextViewText(R.id.weather_desc, desc)
+                            views.setImageViewResource(R.id.weather_icon, iconRes)
+                            views.setInt(R.id.widget_root, "setBackgroundResource", bgRes)
 
-                android.util.Log.d("WeatherWidget-$city", "YYYY Response: $body")
-                
-                if (body?.status == "ok" && result != null && realtime != null) {
-                    // 温度
-                    val tempVal = realtime.temperature ?: 0.0
-                    val temp = String.format("%.0f", tempVal) // 18.69 -> 19
-                    views.setTextViewText(R.id.weather_temp, temp)
-                    
-                    // 天气类型和图标
-                    val skycon = realtime.skycon ?: "CLEAR_DAY"
-                    val (desc, iconRes, bgRes) = getWeatherResources(skycon)
+                            val humidityVal = ((realtime.humidity ?: 0.0) * 100).coerceIn(0.0, 100.0)
+                            views.setTextViewText(R.id.weather_high_low, String.format("湿度 %.0f%%", humidityVal))
+
+                            val aqiVal = realtime.airQuality?.aqi?.chn
+                            val aqiDesc = realtime.airQuality?.description?.chn
+                            views.setTextViewText(R.id.weather_aqi, formatAqiText(aqiVal, aqiDesc))
+                        } else {
+                            views.setTextViewText(R.id.weather_desc, body?.status?.takeIf { it.isNotBlank() } ?: "请求失败")
+                        }
+                    } finally {
+                        appWidgetManager.updateAppWidget(appWidgetId, views)
+                        onComplete()
+                    }
+                }
+
+                override fun onFailure(call: Call<YyyWeatherResponse>, t: Throwable) {
+                    views.setTextViewText(R.id.weather_desc, "网络错误")
+                    views.setTextViewText(R.id.weather_aqi, "--")
+                    appWidgetManager.updateAppWidget(appWidgetId, views)
+                    onComplete()
+                }
+            })
+        }
+
+        try {
+            val weatherRetrofit = Retrofit.Builder()
+                .baseUrl(OPEN_METEO_BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+            val weatherService = weatherRetrofit.create(WeatherService::class.java)
+
+            weatherService.getWeather(latitude = lat, longitude = lon).enqueue(object : Callback<WeatherResponse> {
+                override fun onResponse(call: Call<WeatherResponse>, response: Response<WeatherResponse>) {
+                    val body = response.body()
+                    val current = body?.current
+                    if (!response.isSuccessful || current == null) {
+                        fetchFromYyy()
+                        return
+                    }
+
+                    val tempVal = current.temperature_2m
+                    if (tempVal != null) {
+                        views.setTextViewText(R.id.weather_temp, String.format("%.0f", tempVal))
+                    }
+
+                    val (desc, iconRes, bgRes) = getWeatherResourcesFromCode(current.weather_code)
                     views.setTextViewText(R.id.weather_desc, desc)
                     views.setImageViewResource(R.id.weather_icon, iconRes)
                     views.setInt(R.id.widget_root, "setBackgroundResource", bgRes)
-                    
-                    // 湿度
-                    val humidityVal = ((realtime.humidity ?: 0.0) * 100).coerceIn(0.0, 100.0)
-                    val humidityStr = String.format("湿度 %.0f%%", humidityVal)
-                    views.setTextViewText(R.id.weather_high_low, humidityStr)
-                    
-                    // 空气质量
-                    val aqiVal = realtime.airQuality?.aqi?.chn ?: 0
-                    val aqiDesc = realtime.airQuality?.description?.chn ?: ""
-                    val aqiStr = if (aqiDesc.isNotEmpty()) "$aqiDesc $aqiVal" else "$aqiVal"
-                    views.setTextViewText(R.id.weather_aqi, aqiStr)
-                } else {
-                    views.setTextViewText(R.id.weather_desc, body?.status ?: "")
-                }
-                appWidgetManager.updateAppWidget(appWidgetId, views)
-                onComplete()
-            }
 
-            override fun onFailure(call: Call<YyyWeatherResponse>, t: Throwable) {
-                views.setTextViewText(R.id.weather_desc, "Net Err")
-                appWidgetManager.updateAppWidget(appWidgetId, views)
-                onComplete()
-            }
-        })
+                    val humidityVal = current.relative_humidity_2m
+                    if (humidityVal != null) {
+                        views.setTextViewText(R.id.weather_high_low, String.format("湿度 %.0f%%", humidityVal.coerceIn(0.0, 100.0)))
+                    } else {
+                        views.setTextViewText(R.id.weather_high_low, "")
+                    }
+
+                    val airRetrofit = Retrofit.Builder()
+                        .baseUrl(OPEN_METEO_AIR_QUALITY_BASE_URL)
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build()
+                    val airService = airRetrofit.create(AirQualityService::class.java)
+                    airService.getAirQuality(latitude = lat, longitude = lon).enqueue(object : Callback<AirQualityResponse> {
+                        override fun onResponse(call: Call<AirQualityResponse>, response: Response<AirQualityResponse>) {
+                            val aqi = response.body()?.current?.us_aqi
+                            val (aqiVal, aqiDesc) = toAqiPair(aqi)
+                            views.setTextViewText(R.id.weather_aqi, formatAqiText(aqiVal, aqiDesc))
+                            appWidgetManager.updateAppWidget(appWidgetId, views)
+                            onComplete()
+                        }
+
+                        override fun onFailure(call: Call<AirQualityResponse>, t: Throwable) {
+                            views.setTextViewText(R.id.weather_aqi, "--")
+                            appWidgetManager.updateAppWidget(appWidgetId, views)
+                            onComplete()
+                        }
+                    })
+                }
+
+                override fun onFailure(call: Call<WeatherResponse>, t: Throwable) {
+                    fetchFromYyy()
+                }
+            })
+        } catch (e: Exception) {
+            fetchFromYyy()
+        }
     }
     
     private fun getWeatherResources(skycon: String): Triple<String, Int, Int> {
@@ -294,6 +354,43 @@ class WeatherWidget : AppWidgetProvider() {
             s.contains("WIND") -> Triple("大风", R.drawable.ic_weather_cloud, R.drawable.bg_weather_cloudy)
             s.contains("FOG") || s.contains("HAZE") -> Triple("雾霾", R.drawable.ic_weather_cloud, R.drawable.bg_weather_cloudy)
             else -> Triple("多云", R.drawable.ic_weather_cloud, R.drawable.bg_weather_cloudy)
+        }
+    }
+
+    private fun getWeatherResourcesFromCode(code: Int?): Triple<String, Int, Int> {
+        return when (code) {
+            0 -> Triple("晴", R.drawable.ic_weather_sun, R.drawable.bg_weather_sunny)
+            1, 2, 3 -> Triple("多云", R.drawable.ic_weather_cloud, R.drawable.bg_weather_cloudy)
+            45, 48 -> Triple("雾霾", R.drawable.ic_weather_cloud, R.drawable.bg_weather_cloudy)
+            51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82 -> Triple("雨", R.drawable.ic_rain, R.drawable.bg_weather_rain)
+            71, 73, 75, 77, 85, 86 -> Triple("雪", R.drawable.ic_rain, R.drawable.bg_weather_rain)
+            95, 96, 99 -> Triple("雷雨", R.drawable.ic_rain, R.drawable.bg_weather_rain)
+            else -> Triple("多云", R.drawable.ic_weather_cloud, R.drawable.bg_weather_cloudy)
+        }
+    }
+
+    private fun toAqiPair(usAqi: Double?): Pair<Int?, String?> {
+        val v = usAqi?.toInt()
+        val desc = when {
+            v == null -> null
+            v <= 50 -> "优"
+            v <= 100 -> "良"
+            v <= 150 -> "轻度污染"
+            v <= 200 -> "中度污染"
+            v <= 300 -> "重度污染"
+            else -> "严重污染"
+        }
+        return Pair(v, desc)
+    }
+
+    private fun formatAqiText(aqiVal: Int?, aqiDesc: String?): String {
+        val v = aqiVal ?: 0
+        val d = aqiDesc?.trim().orEmpty()
+        return when {
+            d.isNotEmpty() && v > 0 -> "$d $v"
+            d.isNotEmpty() -> d
+            v > 0 -> v.toString()
+            else -> "--"
         }
     }
 }
