@@ -1,0 +1,20 @@
+com.hntq.destop.widget.library
+dimen widget_margin
+drawable bg_hot_search_widget
+drawable example_appwidget_preview
+id hitokoto_from
+id hitokoto_text
+id hot_footer
+id hot_header
+id hot_item_1
+id hot_item_2
+id hot_item_3
+id hot_list
+layout hitokoto_widget
+layout hot_search_widget
+string hitokoto_widget_description
+string hot_search_widget_description
+string hot_search_widget_footer
+string hot_search_widget_title
+xml hitokoto_widget_info
+xml hot_search_widget_info

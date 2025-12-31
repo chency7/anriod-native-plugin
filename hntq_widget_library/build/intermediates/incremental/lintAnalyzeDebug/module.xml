@@ -1,0 +1,19 @@
+<lint-module
+    format="1"
+    dir="E:\code\anriod-native-plugin\hntq_widget_library"
+    name=":hntq_widget_library"
+    type="LIBRARY"
+    maven="HNTQ.WIDGET:hntq_widget_library:"
+    agpVersion="8.2.0"
+    buildFolder="build"
+    bootClassPath="C:\Users\Administrator\AppData\Local\Android\Sdk\platforms\android-34\android.jar;C:\Users\Administrator\AppData\Local\Android\Sdk\build-tools\34.0.0\core-lambda-stubs.jar"
+    javaSourceLevel="1.8"
+    compileTarget="android-34"
+    neverShrinking="true">
+  <lintOptions
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="debug"/>
+</lint-module>
