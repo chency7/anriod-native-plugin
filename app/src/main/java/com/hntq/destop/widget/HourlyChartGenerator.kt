@@ -42,6 +42,9 @@ object HourlyChartGenerator {
         val displayCount = min(fullData.size, 8) // 显示前8个数据点
         val dataList = fullData.take(displayCount)
         val entries = ArrayList<Entry>()
+
+        val density = 1f
+
         
         dataList.forEachIndexed { index, item ->
             entries.add(Entry(index.toFloat(), item.temp.toFloat()))
@@ -49,18 +52,18 @@ object HourlyChartGenerator {
 
         val dataSet = LineDataSet(entries, "Temperature").apply {
             color = Color.WHITE
-            lineWidth = 2.5f // 稍微加粗
+            lineWidth = 2.5f * density // 稍微加粗
             
             // 圆点配置
             setDrawCircles(true)
             setCircleColor(Color.WHITE)
-            circleRadius = 3f
+            circleRadius = 3f * density
             setDrawCircleHole(false)
 
             // 数值配置
             setDrawValues(true)
             valueTextColor = Color.WHITE
-            valueTextSize = 12f
+            valueTextSize = 10f * density // 10dp
             valueFormatter = object : ValueFormatter() {
                 override fun getFormattedValue(value: Float): String {
                     return "${value.toInt()}°"
@@ -87,8 +90,11 @@ object HourlyChartGenerator {
         chart.apply {
             // 调整边距，底部留出更多空间给图标和文字
             // left, top, right, bottom
-            // top 增加到 80f 以容纳数值
-            setViewPortOffsets(0f, 80f, 0f, 120f) 
+            // top: 数值文字(9dp) + 间距 = 12dp
+            // bottom: 时间文字(9dp) + 图标(18dp) + 间距 = 32dp
+            val topOffset = 12f * density
+            val bottomOffset = 32f * density
+            setViewPortOffsets(0f, topOffset, 0f, bottomOffset) 
             
             description.isEnabled = false
             legend.isEnabled = false
@@ -106,15 +112,15 @@ object HourlyChartGenerator {
                 setDrawGridLines(false)
                 setDrawAxisLine(false)
                 textColor = Color.parseColor("#CCFFFFFF")
-                textSize = 11f
+                textSize = 10f * density // 10dp
                 granularity = 1f
-                yOffset = 10f // 文字向下偏移
+                yOffset = 3f * density // 文字向下偏移
                 
                 // 添加垂直虚线（当前时间）
                 addLimitLine(LimitLine(0f).apply {
                     lineColor = Color.parseColor("#80FFFFFF")
-                    lineWidth = 1f
-                    enableDashedLine(10f, 10f, 0f)
+                    lineWidth = 1f * density
+                    enableDashedLine(5f * density, 5f * density, 0f)
                     labelPosition = LimitLine.LimitLabelPosition.RIGHT_TOP
                 })
 
@@ -135,12 +141,22 @@ object HourlyChartGenerator {
                 setDrawLabels(false)
                 setDrawGridLines(false)
                 
+                // 动态设置 Y 轴范围，防止线条贴顶/贴底
+                if (entries.isNotEmpty()) {
+                    val yMin = entries.minOf { it.y }
+                    val yMax = entries.maxOf { it.y }
+                    val diff = yMax - yMin
+                    val buffer = if (diff < 2f) 2f else diff * 0.2f
+                    axisMinimum = yMin - buffer
+                    axisMaximum = yMax + buffer
+                }
+
                 // 添加水平虚线（当前温度基准）
                 val currentTemp = entries.firstOrNull()?.y ?: 0f
                 addLimitLine(LimitLine(currentTemp).apply {
                     lineColor = Color.parseColor("#80FFFFFF")
-                    lineWidth = 1f
-                    enableDashedLine(10f, 10f, 0f)
+                    lineWidth = 1f * density
+                    enableDashedLine(5f * density, 5f * density, 0f)
                 })
             }
             axisRight.isEnabled = false
@@ -171,6 +187,7 @@ object HourlyChartGenerator {
         chart: LineChart,
         dataList: List<HourlyForecastDataHolder.HourlyItem>
     ) {
+        val density = context.resources.displayMetrics.density
         val transformer = chart.getTransformer(YAxis.AxisDependency.LEFT)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
         
@@ -185,27 +202,29 @@ object HourlyChartGenerator {
             if (index == 0) {
                 paint.style = Paint.Style.STROKE
                 paint.color = Color.WHITE
-                paint.strokeWidth = 3f
-                canvas.drawCircle(x, y, 10f, paint) // 外圈
+                paint.strokeWidth = 2f * density
+                canvas.drawCircle(x, y, 6f * density, paint) // 外圈
 
                 paint.style = Paint.Style.FILL
                 paint.color = Color.parseColor("#FFCC00") // 黄色实心
-                canvas.drawCircle(x, y, 6f, paint)
+                canvas.drawCircle(x, y, 3.5f * density, paint)
             }
 
             // 2. 绘制底部天气图标
             // 图标位置：X轴文字上方。
-            // 我们可以利用 chart.viewPortHandler.contentBottom() 获取图表底部边界
-            // 但因为 viewPortOffsets 设置了底部留白，我们可以直接在底部区域绘制
             val iconResId = getWeatherIconRes(item.skycon)
             val drawable = ContextCompat.getDrawable(context, iconResId)
             drawable?.let {
-                val iconSize = 40
-                // X轴文字大概在 height - 20 左右，图标放在文字上方 15dp 处
-                val iconY = chart.height - 65f 
+                val density = context.resources.displayMetrics.density
+                val iconSize = (18 * density).toInt() // 18dp icon size
+                // 图标位置：放在底部区域上方
+                // bottomOffset 是 32dp。文字大概占 12dp (9sp + padding)。
+                // 剩余 20dp 给图标。
+                // 图标中心大概在 height - 22dp。
+                val iconCenterY = chart.height - (22 * density)
                 
                 val left = (x - iconSize / 2).toInt()
-                val top = (iconY - iconSize / 2).toInt()
+                val top = (iconCenterY - iconSize / 2).toInt()
                 val right = left + iconSize
                 val bottom = top + iconSize
                 

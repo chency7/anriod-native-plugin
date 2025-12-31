@@ -316,7 +316,7 @@ class HourlyForecastWidget : AppWidgetProvider() {
             val aqiDesc = realtime?.airQuality?.description?.chn ?: ""
             val aqiVal = realtime?.airQuality?.aqi?.chn ?: 0
             // 显示格式：优 45
-            val aqiStr = if (aqiDesc.isNotEmpty()) "$aqiDesc $aqiVal" else if (aqiVal > 0) "$aqiVal" else "优 45" // 默认模拟值
+            val aqiStr = if (aqiDesc.isNotEmpty()) "$aqiDesc $aqiVal" else if (aqiVal > 0) "$aqiVal" else "--" // 默认模拟值
             views.setTextViewText(R.id.hourly_aqi, aqiStr)
 
             // 2. 准备列表数据并更新 Holder（全部使用模拟数据）
@@ -335,18 +335,34 @@ class HourlyForecastWidget : AppWidgetProvider() {
                 val minWidthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
                 
                 // 转换为像素，并设置合理的最小值和最大值
-                // 高度：减去头部的大致高度（约60dp），如果获取不到则默认300px
                 val density = context.resources.displayMetrics.density
-                val headerHeightDp = 60
-                val chartHeightDp = if (minHeightDp > headerHeightDp) minHeightDp - headerHeightDp else 100
                 
-                val reqHeight = (chartHeightDp * density).toInt().coerceIn(200, 1200)
-                val reqWidth = if (minWidthDp > 0) (minWidthDp * density).toInt().coerceIn(400, 2000) else 800
+                // Header 高度估算：
+                // 基础高度：36sp(temp) + 12sp(desc) + margins ≈ 50-60dp
+                // 为了兼容大字体，预留稍多一点的空间 (60dp)，并根据总高度动态调整
+                // 如果总高度很小（<110dp），压缩 Header 占比，优先保证图表至少有 50dp
+                val headerHeightDp = if (minHeightDp < 110) 40 else 60
+                
+                // 计算图表可用高度
+                // 如果获取不到 minHeightDp（例如某些 Launcher 返回 0），默认给 100dp
+                val chartHeightDp = if (minHeightDp > 0) {
+                    if (minHeightDp > headerHeightDp) minHeightDp - headerHeightDp else 50
+                } else {
+                    100
+                }
+                
+                // 确保高度至少能容纳上下边距 (约 44dp) 和 图表区域 (至少 20dp) -> 64dp
+                // 这里的 44dp 是 ChartGenerator 内部的 padding (top 12 + bottom 32)
+                val minReqHeight = (50 * density).toInt() // 降低最小高度要求，适应极小模式
+                val reqHeight = (chartHeightDp * density).toInt().coerceAtLeast(minReqHeight).coerceAtMost(1200)
+                
+                val reqWidth = if (minWidthDp > 0) (minWidthDp * density).toInt().coerceIn(100, 2000) else 800
+                val _reqWidth = reqWidth+280
 
                 val chartBitmap = HourlyChartGenerator.generateChart(
                     context,
                     if (newData.isNotEmpty()) newData else HourlyForecastDataHolder.hourlyData,
-                    reqWidth,
+                    _reqWidth,
                     reqHeight
                 )
                 views.setImageViewBitmap(R.id.hourly_chart_view, chartBitmap)
