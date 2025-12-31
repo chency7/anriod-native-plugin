@@ -65,7 +65,7 @@ object HourlyChartGenerator {
 
             mode = LineDataSet.Mode.CUBIC_BEZIER // 平滑曲线
             cubicIntensity = 0.2f
-            setDrawHighlightIndicators(false) // 关闭点击高亮线
+            setDrawHighlightIndicators(true) // 关闭点击高亮线
             
             // 填充配置
             setDrawFilled(true)
@@ -91,7 +91,7 @@ object HourlyChartGenerator {
             
             description.isEnabled = false
             legend.isEnabled = false
-            setTouchEnabled(false)
+            setTouchEnabled(true)
             isDragEnabled = false
             setScaleEnabled(false)
             setPinchZoom(false)
@@ -204,7 +204,7 @@ object HourlyChartGenerator {
             if (index == 0) {
                 paint.style = Paint.Style.STROKE
                 paint.color = Color.WHITE
-                paint.strokeWidth = 2f * density
+                paint.strokeWidth = 1f * density
                 canvas.drawCircle(x, y, 6f * density, paint) // 外圈
 
                 paint.style = Paint.Style.FILL
