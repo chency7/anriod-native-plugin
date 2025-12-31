@@ -226,7 +226,7 @@ class WeatherWidget : AppWidgetProvider() {
                     val aqiStr = if (aqiDesc.isNotEmpty()) "$aqiDesc $aqiVal" else "$aqiVal"
                     views.setTextViewText(R.id.weather_aqi, aqiStr)
                 } else {
-                    views.setTextViewText(R.id.weather_desc, body?.status ?: "API Err")
+                    views.setTextViewText(R.id.weather_desc, body?.status ?: "")
                 }
                 appWidgetManager.updateAppWidget(appWidgetId, views)
             }

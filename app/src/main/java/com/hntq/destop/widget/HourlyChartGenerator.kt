@@ -61,14 +61,7 @@ object HourlyChartGenerator {
             setDrawCircleHole(false)
 
             // 数值配置
-            setDrawValues(true)
-            valueTextColor = Color.WHITE
-            valueTextSize = 10f * density // 10dp
-            valueFormatter = object : ValueFormatter() {
-                override fun getFormattedValue(value: Float): String {
-                    return "${value.toInt()}°"
-                }
-            }
+            setDrawValues(false)
 
             mode = LineDataSet.Mode.CUBIC_BEZIER // 平滑曲线
             cubicIntensity = 0.2f
@@ -90,7 +83,7 @@ object HourlyChartGenerator {
         chart.apply {
             // 调整边距，底部留出更多空间给图标和文字
             // left, top, right, bottom
-            // top: 数值文字(9dp) + 间距 = 12dp
+            // top: 数值文字(9dp) + 间距 = 12dp -> 改为 20dp 以便数字上移
             // bottom: 时间文字(9dp) + 图标(18dp) + 间距 = 32dp
             val topOffset = 12f * density
             val bottomOffset = 32f * density
@@ -190,6 +183,11 @@ object HourlyChartGenerator {
         val density = context.resources.displayMetrics.density
         val transformer = chart.getTransformer(YAxis.AxisDependency.LEFT)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textSize = 10f * density
+            textAlign = Paint.Align.CENTER
+        }
         
         dataList.forEachIndexed { index, item ->
             // 获取当前点在屏幕上的坐标
@@ -197,6 +195,10 @@ object HourlyChartGenerator {
             transformer.pointValuesToPixel(point)
             val x = point[0]
             val y = point[1]
+
+            // 绘制温度数值（向上偏移 12dp）
+            val textY = y - 12 * density
+            canvas.drawText("${item.temp.toInt()}°", x, textY, textPaint)
 
             // 1. 绘制第一个点的特殊样式（黄色光晕圆点）
             if (index == 0) {

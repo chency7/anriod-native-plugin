@@ -357,7 +357,7 @@ class HourlyForecastWidget : AppWidgetProvider() {
                 val reqHeight = (chartHeightDp * density).toInt().coerceAtLeast(minReqHeight).coerceAtMost(1200)
                 
                 val reqWidth = if (minWidthDp > 0) (minWidthDp * density).toInt().coerceIn(100, 2000) else 800
-                val _reqWidth = reqWidth+280
+                val _reqWidth = reqWidth+250
 
                 val chartBitmap = HourlyChartGenerator.generateChart(
                     context,
