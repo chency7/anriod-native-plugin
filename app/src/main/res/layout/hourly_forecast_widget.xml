@@ -102,7 +102,7 @@
         android:layout_height="match_parent"
         android:layout_below="@+id/top_left_container"
         android:layout_alignParentBottom="true"
-        android:layout_marginTop="1dp"
+        android:layout_marginTop="8dp"
         android:layout_marginBottom="1dp"
         android:layout_marginHorizontal="8dp">
 
