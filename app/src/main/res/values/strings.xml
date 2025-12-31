@@ -15,4 +15,8 @@
     <string name="schedule_widget_name">排班表</string>
     <string name="schedule_widget_description">按天切换查看当天值班岗位</string>
     <string name="schedule_widget_title">值班表</string>
+    <string name="rain_rank_widget_name">降水排名</string>
+    <string name="rain_rank_widget_title">湖南降水排名</string>
+    <string name="rain_rank_widget_description">区域站小时累计降水排名</string>
+    <string name="rain_rank_widget_footer">数据模拟 · 列表可滑动 · 点击标题切换时段</string>
 </resources>

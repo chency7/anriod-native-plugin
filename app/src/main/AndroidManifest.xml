@@ -108,8 +108,27 @@
                 android:resource="@xml/schedule_widget_info" />
         </receiver>
 
+        <receiver
+            android:name=".rainrank.RainRankWidget"
+            android:exported="true"
+            android:label="@string/rain_rank_widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.hntq.destop.widget.ACTION_RAIN_RANK_CYCLE_WINDOW" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/rain_rank_widget_info" />
+        </receiver>
+
         <service
             android:name=".schedule.ScheduleWidgetService"
+            android:exported="false"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
+
+        <service
+            android:name=".rainrank.RainRankWidgetService"
             android:exported="false"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
 
