@@ -65,15 +65,30 @@
         android:orientation="vertical"
         android:gravity="end">
         
-        <TextView
-            android:id="@+id/hourly_aqi"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="--"
-            android:textColor="#FFFFFF"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textSize="12sp"/>
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            
+            <ImageView
+                android:id="@+id/hourly_warning_icon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/warn"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/hourly_aqi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="--"
+                android:textColor="#FFFFFF"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textSize="12sp"/>
+        </LinearLayout>
             
         <LinearLayout
             android:layout_width="wrap_content"

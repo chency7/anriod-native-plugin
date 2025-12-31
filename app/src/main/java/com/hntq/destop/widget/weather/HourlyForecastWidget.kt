@@ -38,7 +38,11 @@ class HourlyForecastWidget : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         startAlarm(context)
-        // 注意：更新逻辑已移至 onReceive 以支持异步保活（goAsync）
+        val intent = Intent(context, HourlyForecastWidget::class.java).apply {
+            action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
+        }
+        context.sendBroadcast(intent)
     }
 
     override fun onEnabled(context: Context) {
@@ -133,6 +137,16 @@ class HourlyForecastWidget : AppWidgetProvider() {
         onComplete: () -> Unit
     ) {
         val views = RemoteViews(context.packageName, R.layout.hourly_forecast_widget)
+        val refreshIntent = Intent(context, HourlyForecastWidget::class.java).apply {
+            action = ACTION_REFRESH
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            appWidgetId,
+            refreshIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        views.setOnClickPendingIntent(R.id.hourly_root, pendingIntent)
         
         // 尝试从缓存恢复旧数据，避免闪烁成默认值
         try {
@@ -160,6 +174,9 @@ class HourlyForecastWidget : AppWidgetProvider() {
                     // 由于单例在进程重启后会丢，所以这里只能尽力而为
                     // 理想情况是将 List 也缓存到文件，但这里先只做 Header 的防闪烁
                 }
+
+                views.setViewVisibility(R.id.hourly_warning_icon, android.view.View.VISIBLE)
+                appWidgetManager.updateAppWidget(appWidgetId, views)
             }
         } catch (e: Exception) {
             // 忽略缓存读取错误
@@ -340,100 +357,91 @@ class HourlyForecastWidget : AppWidgetProvider() {
         locationName: String
     ) {
         try {
+            val cache = WeatherCache.getCache(context)
             val realtime = result?.realtime
-            // 忽略 API 返回的小时数据，强制使用 Mock
+            val tempVal = realtime?.temperature ?: cache?.temp
+            if (tempVal != null) {
+                views.setTextViewText(R.id.hourly_temp, String.format("%.0f", tempVal))
+            } else {
+                views.setTextViewText(R.id.hourly_temp, "--")
+            }
 
-            // 1. 更新头部信息
-            // 温度
-            val tempVal = realtime?.temperature ?: 18.0
-            views.setTextViewText(R.id.hourly_temp, String.format("%.0f", tempVal))
-            
-            // 天气状况
-            val skycon = realtime?.skycon ?: "CLEAR_DAY"
-            val (desc, _, _) = getWeatherResources(skycon)
-            views.setTextViewText(R.id.hourly_weather_desc, desc)
-            
-            // 空气质量
-            val aqiDesc = realtime?.airQuality?.description?.chn ?: ""
-            val aqiVal = realtime?.airQuality?.aqi?.chn ?: 0
-            // 显示格式：优 45
-            val aqiStr = if (aqiDesc.isNotEmpty()) "$aqiDesc $aqiVal" else if (aqiVal > 0) "$aqiVal" else "--" // 默认模拟值
+            val skycon = realtime?.skycon ?: cache?.skycon
+            if (!skycon.isNullOrEmpty()) {
+                val (desc, _, _) = getWeatherResources(skycon)
+                views.setTextViewText(R.id.hourly_weather_desc, desc)
+            } else {
+                views.setTextViewText(R.id.hourly_weather_desc, "--")
+            }
+
+            val aqiDesc = realtime?.airQuality?.description?.chn ?: cache?.aqiDesc.orEmpty()
+            val aqiVal = realtime?.airQuality?.aqi?.chn ?: cache?.aqiVal ?: 0
+            val aqiStr = if (aqiDesc.isNotEmpty()) "$aqiDesc $aqiVal" else if (aqiVal > 0) "$aqiVal" else "--"
             views.setTextViewText(R.id.hourly_aqi, aqiStr)
 
-            // 保存到缓存
-            if (result != null) {
+            views.setViewVisibility(R.id.hourly_warning_icon, android.view.View.VISIBLE)
+
+            val displayLocation = if (locationName.contains("失败") || locationName.contains("错误")) {
+                cache?.location ?: locationName
+            } else {
+                locationName
+            }
+            views.setTextViewText(R.id.hourly_location, displayLocation)
+
+            val hasRealtime =
+                realtime?.temperature != null || !realtime?.skycon.isNullOrEmpty() || realtime?.airQuality != null
+
+            if (hasRealtime && tempVal != null && !skycon.isNullOrEmpty()) {
                 WeatherCache.saveCache(
                     context,
                     tempVal,
                     skycon,
                     aqiDesc,
                     aqiVal,
-                    locationName
+                    displayLocation
                 )
             }
-            
-            // 2. 准备列表数据并更新 Holder（全部使用模拟数据）
-            val newData = ArrayList<HourlyForecastDataHolder.HourlyItem>()
-            generateMockHourlyData(newData, tempVal, skycon)
-            
-            // 更新单例数据
-            HourlyForecastDataHolder.hourlyData = newData
 
-            views.setViewVisibility(R.id.hourly_chart_view, android.view.View.VISIBLE)
+            if (hasRealtime || HourlyForecastDataHolder.hourlyData.isEmpty()) {
+                val baseTemp = tempVal ?: 18.0
+                val baseSkycon = skycon ?: "CLEAR_DAY"
+                val newData = ArrayList<HourlyForecastDataHolder.HourlyItem>()
+                generateMockHourlyData(newData, baseTemp, baseSkycon)
+                HourlyForecastDataHolder.hourlyData = newData
+            }
 
-            try {
-                // 获取 Widget 当前尺寸
-                val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
-                val minHeightDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
-                val minWidthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
-                
-                // 转换为像素，并设置合理的最小值和最大值
-                val density = context.resources.displayMetrics.density
-                
-                // Header 高度估算：
-                // 基础高度：36sp(temp) + 12sp(desc) + margins ≈ 50-60dp
-                // 为了兼容大字体，预留稍多一点的空间 (60dp)，并根据总高度动态调整
-                // 如果总高度很小（<110dp），压缩 Header 占比，优先保证图表至少有 50dp
-                val headerHeightDp = if (minHeightDp < 110) 40 else 60
-                
-                // 计算图表可用高度
-                // 如果获取不到 minHeightDp（例如某些 Launcher 返回 0），默认给 100dp
-                val chartHeightDp = if (minHeightDp > 0) {
-                    if (minHeightDp > headerHeightDp) minHeightDp - headerHeightDp else 50
-                } else {
-                    100
+            if (HourlyForecastDataHolder.hourlyData.isNotEmpty()) {
+                views.setViewVisibility(R.id.hourly_chart_view, android.view.View.VISIBLE)
+                try {
+                    val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
+                    val minHeightDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
+                    val minWidthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
+
+                    val density = context.resources.displayMetrics.density
+                    val headerHeightDp = if (minHeightDp < 110) 40 else 60
+                    val chartHeightDp = if (minHeightDp > 0) {
+                        if (minHeightDp > headerHeightDp) minHeightDp - headerHeightDp else 50
+                    } else {
+                        100
+                    }
+                    val minReqHeight = (50 * density).toInt()
+                    val reqHeight = (chartHeightDp * density).toInt().coerceAtLeast(minReqHeight).coerceAtMost(1200)
+
+                    val reqWidth = if (minWidthDp > 0) (minWidthDp * density).toInt().coerceIn(100, 2000) else 800
+                    val _reqWidth = reqWidth + 250
+
+                    val chartBitmap = HourlyChartGenerator.generateChart(
+                        context,
+                        HourlyForecastDataHolder.hourlyData,
+                        _reqWidth,
+                        reqHeight
+                    )
+                    views.setImageViewBitmap(R.id.hourly_chart_view, chartBitmap)
+                } catch (e: Exception) {
+                    android.util.Log.e("HourlyWidget", "Chart error", e)
+                    views.setViewVisibility(R.id.hourly_chart_view, android.view.View.GONE)
                 }
-                
-                // 确保高度至少能容纳上下边距 (约 44dp) 和 图表区域 (至少 20dp) -> 64dp
-                // 这里的 44dp 是 ChartGenerator 内部的 padding (top 12 + bottom 32)
-                val minReqHeight = (50 * density).toInt() // 降低最小高度要求，适应极小模式
-                val reqHeight = (chartHeightDp * density).toInt().coerceAtLeast(minReqHeight).coerceAtMost(1200)
-                
-                val reqWidth = if (minWidthDp > 0) (minWidthDp * density).toInt().coerceIn(100, 2000) else 800
-                val _reqWidth = reqWidth+250
-
-                val chartBitmap = HourlyChartGenerator.generateChart(
-                    context,
-                    if (newData.isNotEmpty()) newData else HourlyForecastDataHolder.hourlyData,
-                    _reqWidth,
-                    reqHeight
-                )
-                views.setImageViewBitmap(R.id.hourly_chart_view, chartBitmap)
-                
-                // 设置点击事件（点击整个 Widget 触发刷新）
-                val refreshIntent = Intent(context, HourlyForecastWidget::class.java).apply {
-                    action = ACTION_REFRESH
-                }
-                val pendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    appWidgetId,
-                    refreshIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                views.setOnClickPendingIntent(R.id.hourly_root, pendingIntent)
-                
-            } catch (e: Exception) {
-                android.util.Log.e("HourlyWidget", "Chart error", e)
+            } else {
                 views.setViewVisibility(R.id.hourly_chart_view, android.view.View.GONE)
             }
 
