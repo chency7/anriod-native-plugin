@@ -11,4 +11,6 @@
     <string name="weather_widget_description">显示当前气温和降雨量</string>
     <string name="hourly_forecast_widget_name">小时降水预报组件</string>
     <string name="hourly_forecast_widget_description">显示未来几小时的降水预报</string>
+    <string name="schedule_widget_name">排班表</string>
+    <string name="schedule_widget_description">按天切换查看当天值班岗位</string>
 </resources>

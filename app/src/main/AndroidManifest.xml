@@ -91,6 +91,27 @@
                 android:resource="@xml/hourly_forecast_widget_info" />
         </receiver>
 
+        <receiver
+            android:name=".schedule.ScheduleWidget"
+            android:exported="true"
+            android:label="@string/schedule_widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.hntq.destop.widget.ACTION_SCHEDULE_PREV_DAY" />
+                <action android:name="com.hntq.destop.widget.ACTION_SCHEDULE_NEXT_DAY" />
+                <action android:name="com.hntq.destop.widget.ACTION_SCHEDULE_REFRESH" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/schedule_widget_info" />
+        </receiver>
+
+        <service
+            android:name=".schedule.ScheduleWidgetService"
+            android:exported="false"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
+
     </application>
 
 </manifest>
