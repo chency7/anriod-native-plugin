@@ -33,7 +33,11 @@ class WeatherWidget : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         startAlarm(context)
-        // 注意：更新逻辑已移至 onReceive 以支持异步保活（goAsync）
+        val intent = Intent(context, WeatherWidget::class.java).apply {
+            action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
+        }
+        context.sendBroadcast(intent)
     }
 
     override fun onEnabled(context: Context) {
@@ -51,6 +55,10 @@ class WeatherWidget : AppWidgetProvider() {
         if (action == AppWidgetManager.ACTION_APPWIDGET_UPDATE || 
             action == ACTION_AUTO_UPDATE || 
             action == ACTION_REFRESH) {
+
+            if (action == ACTION_REFRESH) {
+                android.widget.Toast.makeText(context, "正在更新天气...", android.widget.Toast.LENGTH_SHORT).show()
+            }
             
             val pendingResult = goAsync()
             val appWidgetManager = AppWidgetManager.getInstance(context)
@@ -109,6 +117,16 @@ class WeatherWidget : AppWidgetProvider() {
 
     private fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, onComplete: () -> Unit) {
         val views = RemoteViews(context.packageName, R.layout.weather_widget)
+        val refreshIntent = Intent(context, WeatherWidget::class.java).apply {
+            action = ACTION_REFRESH
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            appWidgetId,
+            refreshIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
         // 尝试获取位置
         var lat = LAT
         var lon = LON
