@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_schedule_widget"
-    android:padding="@dimen/widget_padding">
+    android:padding="12dp">
 
     <LinearLayout
         android:id="@+id/schedule_header"
@@ -14,47 +14,33 @@
 
         <ImageView
             android:id="@+id/schedule_prev"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:padding="4dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:padding="6dp"
             android:src="@drawable/ic_schedule_arrow_left" />
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/schedule_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:text="@string/schedule_widget_title"
-            android:textColor="#CCFFFFFF"
-            android:textSize="11sp"
-            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/schedule_date"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:drawableStart="@drawable/ic_schedule_calendar"
+            android:drawablePadding="8dp"
             android:ellipsize="end"
-            android:gravity="center_horizontal"
+            android:gravity="center"
             android:maxLines="1"
             android:text="2026-01-01 星期四"
             android:textColor="#FFFFFF"
-            android:textSize="14sp"
+            android:textSize="16sp"
             android:textStyle="bold" />
-        </LinearLayout>
 
         <ImageView
             android:id="@+id/schedule_next"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:padding="4dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:padding="6dp"
             android:src="@drawable/ic_schedule_arrow_right" />
     </LinearLayout>
 
@@ -63,10 +49,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/schedule_header"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="12dp"
         android:divider="@android:color/transparent"
         android:dividerHeight="8dp"
-        android:scrollbars="vertical" />
+        android:scrollbars="none" />
 
     <TextView
         android:id="@+id/schedule_empty"
@@ -77,7 +63,7 @@
         android:gravity="center"
         android:text="暂无排班"
         android:textColor="#CCFFFFFF"
-        android:textSize="13sp"
+        android:textSize="14sp"
         android:visibility="gone" />
 
 </RelativeLayout>

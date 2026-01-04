@@ -5,10 +5,10 @@
     android:background="@drawable/bg_schedule_row"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingLeft="12dp"
-    android:paddingTop="10dp"
-    android:paddingRight="12dp"
-    android:paddingBottom="10dp">
+    android:paddingLeft="16dp"
+    android:paddingTop="12dp"
+    android:paddingRight="16dp"
+    android:paddingBottom="12dp">
 
     <TextView
         android:id="@+id/schedule_row_name"
@@ -18,8 +18,8 @@
         android:ellipsize="end"
         android:maxLines="1"
         android:text="张清"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
+        android:textColor="#333333"
+        android:textSize="15sp"
         android:textStyle="bold" />
 
     <TextView
@@ -30,8 +30,8 @@
         android:gravity="end"
         android:maxLines="1"
         android:text="综合协调"
-        android:textColor="#DDE7FF"
-        android:textSize="13sp" />
+        android:textColor="#666666"
+        android:textSize="14sp" />
 
 </LinearLayout>
 
