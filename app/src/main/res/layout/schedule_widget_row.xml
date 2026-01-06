@@ -10,6 +10,13 @@
     android:paddingRight="16dp"
     android:paddingBottom="12dp">
 
+    <ImageView
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginEnd="8dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_schedule_person" />
+
     <TextView
         android:id="@+id/schedule_row_name"
         android:layout_width="0dp"
