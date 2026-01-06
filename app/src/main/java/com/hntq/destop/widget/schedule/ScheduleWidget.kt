@@ -49,8 +49,8 @@ class ScheduleWidget : AppWidgetProvider() {
             return today
         }
 
-        private fun updateOne(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
-            val epochDay = ensureEpochDay(context, appWidgetId)
+        private fun updateOne(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, epochDayOverride: Long? = null) {
+            val epochDay = epochDayOverride ?: ensureEpochDay(context, appWidgetId)
             val date = LocalDate.ofEpochDay(epochDay)
 
             val views = RemoteViews(context.packageName, R.layout.schedule_widget)
@@ -136,18 +136,22 @@ class ScheduleWidget : AppWidgetProvider() {
             return
         }
 
+        var newEpochDay: Long? = null
+
         when (action) {
             ACTION_PREV_DAY -> {
-                val epochDay = ensureEpochDay(context, appWidgetId) - 1
-                setEpochDay(context, appWidgetId, epochDay)
+                val current = ensureEpochDay(context, appWidgetId)
+                newEpochDay = current - 1
+                setEpochDay(context, appWidgetId, newEpochDay)
             }
             ACTION_NEXT_DAY -> {
-                val epochDay = ensureEpochDay(context, appWidgetId) + 1
-                setEpochDay(context, appWidgetId, epochDay)
+                val current = ensureEpochDay(context, appWidgetId)
+                newEpochDay = current + 1
+                setEpochDay(context, appWidgetId, newEpochDay)
             }
         }
 
-        updateOne(context, appWidgetManager, appWidgetId)
+        updateOne(context, appWidgetManager, appWidgetId, newEpochDay)
     }
 }
 
