@@ -51,19 +51,16 @@ internal class RainRankWidgetViewsFactory(
         views.setTextViewText(R.id.rain_rank_row_station, item.station)
         views.setTextViewText(R.id.rain_rank_row_value, String.format(Locale.CHINA, "%.1fmm", item.mm))
 
-        val primaryColor = 0xFFFFFFFF.toInt()
-        val secondaryColor = 0xFFEAEAEA.toInt()
-        val highlightColor = 0xFFFFD36E.toInt()
-        val valuePrimary = 0xFFDDE7FF.toInt()
 
         val nameColor = when (rankNo) {
-            1 -> highlightColor
-            2, 3 -> primaryColor
-            else -> secondaryColor
+            1 -> android.graphics.Color.RED
+            2, 3 -> android.graphics.Color.RED
+            else -> android.graphics.Color.BLACK
         }
+
         views.setTextColor(R.id.rain_rank_row_no, nameColor)
         views.setTextColor(R.id.rain_rank_row_station, nameColor)
-        views.setTextColor(R.id.rain_rank_row_value, if (rankNo <= 3) valuePrimary else secondaryColor)
+        views.setTextColor(R.id.rain_rank_row_value, android.graphics.Color.BLACK)
         return views
     }
 

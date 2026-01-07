@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:gravity="start"
         android:text="1"
-        android:textColor="#FFFFFF"
+        android:textColor="#1565C0"
         android:textSize="14sp"
         android:textStyle="bold" />
 
@@ -28,7 +28,7 @@
         android:ellipsize="end"
         android:maxLines="1"
         android:text="长沙·马坡岭"
-        android:textColor="#FFFFFF"
+        android:textColor="#1565C0"
         android:textSize="14sp"
         android:textStyle="bold" />
 
@@ -38,7 +38,7 @@
         android:layout_height="wrap_content"
         android:gravity="end"
         android:text="0.0mm"
-        android:textColor="#DDE7FF"
+        android:textColor="#1565C0"
         android:textSize="13sp" />
 
 </LinearLayout>
