@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <dimen name="widget_margin">8dp</dimen>
-    <string name="hitokoto_widget_description">显示一言API的谏言</string>
-    <string name="hot_search_widget_description">显示微博热搜前三并轮播</string>
-    <string name="hot_search_widget_footer">微博热搜 · 点击标题刷新</string>
-    <string name="hot_search_widget_title">热搜速览</string>
-</resources>
